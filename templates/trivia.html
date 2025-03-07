@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atrapa los Perritos 🐶</title>
+    <style>
+        body {
+            background-color: #ffebf1;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 80vh;
+            overflow: hidden;
+            border: 2px solid pink;
+        }
+        .flower {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            animation: fall 5s linear forwards;
+        }
+        @keyframes fall {
+            from { transform: translateY(-10vh); }
+            to { transform: translateY(80vh); }
+        }
+        #basket {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 100px;
+            background: url('static/imagenes/osito.jpg') no-repeat center/contain;
+            pointer-events: none;
+        }
+        #score {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Atrapa los Perritos 🐶</h1>
+    <p>¡Mueve la canasta y atrapa tantos perritos como puedas!</p>
+    <div id="score">Puntaje: 0</div>
+    <div id="game-container">
+        <div id="basket"></div>
+    </div>
+    <script>
+        let score = 0;
+        let gameActive = true;
+        const basket = document.getElementById("basket");
+        const gameContainer = document.getElementById("game-container");
+
+        // Mover la canasta con el mouse
+        document.addEventListener("mousemove", (event) => {
+            let x = event.clientX - 50; // Ajusta para centrar mejor la imagen
+            basket.style.left = `${x}px`;
+        });
+
+        function createFlower() {
+            if (!gameActive) return; // Evita que sigan cayendo perritos si el juego terminó.
+
+            const flower = document.createElement("img");
+            flower.src = "static/imagenes/perrito.jpg";
+            flower.classList.add("flower");
+            flower.style.left = Math.random() * 90 + "vw";
+            gameContainer.appendChild(flower);
+
+            let fallInterval = setInterval(() => {
+                let rect1 = flower.getBoundingClientRect();
+                let rect2 = basket.getBoundingClientRect();
+                if (
+                    rect1.bottom >= rect2.top &&
+                    rect1.left >= rect2.left &&
+                    rect1.right <= rect2.right
+                ) {
+                    score++;
+                    document.getElementById("score").innerText = `Puntaje: ${score}`;
+                    flower.remove();
+                    clearInterval(fallInterval);
+                    checkWin();
+                }
+            }, 50);
+
+            setTimeout(() => {
+                flower.remove();
+                clearInterval(fallInterval);
+            }, 5000);
+        }
+
+        function checkWin() {
+    if (score >= 15) {
+        gameActive = false;
+        alert("🎉 ¡FELICIDADES! Has atrapado 15 perritos 🐶🎉");
+
+        // Marcar el juego como completado en localStorage
+        let juegosCompletos = JSON.parse(localStorage.getItem('juegosCompletos')) || [];
+        if (!juegosCompletos.includes('trivia')) {
+            juegosCompletos.push('trivia');
+            localStorage.setItem('juegosCompletos', JSON.stringify(juegosCompletos));
+        }
+
+        setTimeout(() => {
+            resetGame();
+        }, 2000);
+
+        setTimeout(function() {
+            window.location.href = "/";
+        }, 1000);
+    }
+}
+
+        function resetGame() {
+            score = 0;
+            gameActive = true;
+            document.getElementById("score").innerText = "Puntaje: 0";
+        }
+
+        setInterval(createFlower, 1000);
+    </script>
+</body>
+</html>

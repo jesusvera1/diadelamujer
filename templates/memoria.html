@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="carga">
+    <div class="spinner"></div>
+    <p>Cargando...</p>
+</div>
+
+<section id="contenido" style="display: none;">
+    <h2>Juego de Memoria</h2>
+    <p>Encuentra las parejas de tarjetas.</p>
+    <div id="contadores">
+        <p>Tiempo: <span id="tiempo">0</span> segundos</p>
+        <p>Movimientos: <span id="movimientos">0</span></p>
+    </div>
+    <div id="tablero">
+        <!-- Tarjetas del juego de memoria -->
+    </div>
+    <button id="reiniciar" onclick="reiniciarJuego()">Reiniciar Juego</button>
+</section>
+
+<script>
+    // Simula una carga de 2 segundos
+    setTimeout(function() {
+        document.getElementById('carga').style.display = 'none';
+        document.getElementById('contenido').style.display = 'block';
+        iniciarTemporizador();
+    }, 2000);
+
+    // Imágenes de animalitos (puedes reemplazar estas URLs con las rutas de tus imágenes)
+    const imagenes = [
+        "static/imagenes/descarga2.gif", // Gato
+        "static/imagenes/perrito.jpg", // Perro
+        "static/imagenes/gatito.png", // Conejo
+        "static/imagenes/osito.jpg", // Oso
+        "static/imagenes/leoncito.avif", // Zorro
+        "static/imagenes/pinguinito.jpg", // Pingüino
+        "static/imagenes/elefante.jpg", // Elefante
+        "static/imagenes/jirafa.png", // Jirafa
+    ];
+
+    const tarjetas = [...imagenes, ...imagenes]; // Duplicamos las imágenes para formar parejas
+    let tarjetasVolteadas = [];
+    let parejasEncontradas = 0;
+    let movimientos = 0;
+    let tiempo = 0;
+    let temporizador;
+
+    function crearTablero() {
+        const tablero = document.getElementById('tablero');
+        tarjetas.sort(() => Math.random() - 0.5);
+        tarjetas.forEach((imagen, index) => {
+            const div = document.createElement('div');
+            div.classList.add('tarjeta');
+            div.dataset.index = index;
+            div.innerHTML = '<img src="' + imagen + '" alt="Animalito" style="display: none;">';
+            div.addEventListener('click', voltearTarjeta);
+            tablero.appendChild(div);
+        });
+    }
+
+    function voltearTarjeta(event) {
+    const tarjeta = event.target;
+
+    // Evitar que una tarjeta ya volteada se vuelva a voltear
+    if (tarjeta.classList.contains('volteada') || tarjetasVolteadas.length === 2) {
+        return;
+    }
+
+    // Mostrar la imagen de la tarjeta
+    const img = tarjeta.querySelector('img');
+    img.style.display = 'block';
+
+    // Agregar la clase 'volteada' para evitar que se vuelva a voltear
+    tarjeta.classList.add('volteada');
+
+    // Agregar la tarjeta a la lista de tarjetas volteadas
+    tarjetasVolteadas.push(tarjeta);
+
+    // Verificar si se han volteado dos tarjetas
+    if (tarjetasVolteadas.length === 2) {
+        movimientos++;
+        document.getElementById('movimientos').textContent = movimientos;
+
+        // Deshabilitar clics en todas las tarjetas mientras se verifica la pareja
+        document.querySelectorAll('.tarjeta').forEach(t => t.style.pointerEvents = 'none');
+
+        setTimeout(() => {
+            verificarPareja();
+
+            // Habilitar clics en todas las tarjetas después de verificar la pareja
+            document.querySelectorAll('.tarjeta').forEach(t => t.style.pointerEvents = 'auto');
+        }, 1000); // Esperar 1 segundo antes de verificar la pareja
+    }
+}
+
+function verificarPareja() {
+    const [tarjeta1, tarjeta2] = tarjetasVolteadas;
+    const img1 = tarjeta1.querySelector('img').src;
+    const img2 = tarjeta2.querySelector('img').src;
+
+    if (img1 === img2) {
+        parejasEncontradas++;
+        if (parejasEncontradas === tarjetas.length / 2) {
+            clearInterval(temporizador);
+            alert(`¡Felicidades! Completaste el juego en ${tiempo} segundos con ${movimientos} movimientos.`);
+
+            // Marcar el juego de memoria como completado en localStorage
+            let juegosCompletos = JSON.parse(localStorage.getItem('juegosCompletos')) || [];
+            if (!juegosCompletos.includes('memoria')) {
+                juegosCompletos.push('memoria');
+                localStorage.setItem('juegosCompletos', JSON.stringify(juegosCompletos));
+            }
+
+            setTimeout(function() {
+                window.location.href = "/";
+            }, 1000);
+        }
+    } else {
+        tarjeta1.querySelector('img').style.display = 'none';
+        tarjeta2.querySelector('img').style.display = 'none';
+        tarjeta1.classList.remove('volteada');
+        tarjeta2.classList.remove('volteada');
+    }
+    tarjetasVolteadas = [];
+}
+
+    function iniciarTemporizador() {
+        temporizador = setInterval(() => {
+            tiempo++;
+            document.getElementById('tiempo').textContent = tiempo;
+        }, 1000);
+    }
+
+    function reiniciarJuego() {
+        clearInterval(temporizador);
+        document.getElementById('tablero').innerHTML = '';
+        tarjetasVolteadas = [];
+        parejasEncontradas = 0;
+        movimientos = 0;
+        tiempo = 0;
+        document.getElementById('movimientos').textContent = movimientos;
+        document.getElementById('tiempo').textContent = tiempo;
+        crearTablero();
+        iniciarTemporizador();
+    }
+
+    crearTablero();
+</script>
+
+<style>
+    #carga {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        height: 100vh;
+    }
+    #contenido {
+        text-align: center;
+    }
+    #tablero {
+        display: grid;
+        grid-template-columns: repeat(4, 100px);
+        grid-gap: 10px;
+        justify-content: center;
+        margin: 20px auto;
+    }
+    .tarjeta {
+        width: 100px;
+        height: 100px;
+        background-color: pink;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    .tarjeta img {
+        width: 80%;
+        height: 80%;
+        object-fit: cover;
+        border-radius: 10px;
+    }
+    #contadores {
+        margin: 20px 0;
+    }
+    #reiniciar {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: pink;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="carga">
+    <div class="spinner"></div>
+    <p>Cargando...</p>
+</div>
+
+<section id="contenido" style="display: none;">
+    <h2>¡Bienvenida, LICENCIADA CLAUDIA!</h2>
+    <p>Celebramos tu fuerza y tu belleza. 💜</p>
+    
+    <!-- Juegos -->
+    <div id="juegos">
+        <h3>Juegos Interactivos</h3>
+        <button onclick="iniciarJuego('trivia')">Atrapa Perritos</button>
+        <button onclick="iniciarJuego('memoria')">Jugar Memoria</button>
+        <button onclick="iniciarJuego('rompecabezas')">Armar Rompecabezas</button>
+    </div>
+</section>
+
+<script>
+    // Simula una carga de 3 segundos
+    setTimeout(function() {
+        document.getElementById('carga').style.display = 'none';
+        document.getElementById('contenido').style.display = 'block';
+    }, 3000);
+
+    function iniciarJuego(juego) {
+        if (juego === 'trivia') {
+            window.location.href = "/trivia";
+        } else if (juego === 'memoria') {
+            window.location.href = "/memoria";
+        } else if (juego === 'rompecabezas') {
+            window.location.href = "/rompecabezas";
+        }
+    }
+    function verificarJuegosCompletos() {
+        const juegosCompletos = JSON.parse(localStorage.getItem('juegosCompletos')) || [];
+        console.log("Juegos completados:", juegosCompletos); // Depuración
+
+        if (juegosCompletos.length === 3) {
+            console.log("Todos los juegos están completos. Redirigiendo..."); // Depuración
+            setTimeout(function() {
+                window.location.href = "/mensaje-final";
+        }, 1000);
+    } else {
+        console.log("Faltan juegos por completar."); // Depuración
+    }
+}
+
+// Llama a la función cuando la página se carga
+window.onload = verificarJuegosCompletos;
+</script>
+{% endblock %}
